@@ -126,8 +126,12 @@ public class CheckFiles extends SvrProcess{
 			if (cnt % 1000 == 0)
 				statusUpdate("Processing ... " + cnt + " / " + objs.size());
 			String filename = objs.get(0).toString();
-			int tableId  = ((BigDecimal) objs.get(1)).intValue();
-			int recordId = ((BigDecimal) objs.get(2)).intValue();
+			int tableId  = 0;
+			if (objs.get(1) != null && objs.get(1) instanceof BigDecimal)
+				tableId = ((BigDecimal) objs.get(1)).intValue();
+			int recordId = 0;
+			if (objs.get(2) != null && objs.get(2) instanceof BigDecimal)
+				recordId = ((BigDecimal) objs.get(2)).intValue();
 			File file = new File(filename);
 			if (! file.exists()) {
 				if (tableId > 0 && recordId > 0)
