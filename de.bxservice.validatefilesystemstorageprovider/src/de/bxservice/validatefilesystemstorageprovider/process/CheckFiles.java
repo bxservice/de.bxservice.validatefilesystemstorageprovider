@@ -182,21 +182,28 @@ public class CheckFiles extends SvrProcess{
 		StringBuilder  sqlFolders = new StringBuilder();
 		sqlFolders.append("SELECT DISTINCT Folder ");
 		sqlFolders.append("FROM   AD_StorageProvider sp ");
-		sqlFolders.append("       JOIN AD_ClientInfo ci ");
-		sqlFolders.append("         ON ( ci.AD_StorageProvider_ID = sp.AD_StorageProvider_ID ");
-		sqlFolders.append("               OR ci.StorageArchive_ID = sp.AD_StorageProvider_ID ) ");
+		sqlFolders.append("       JOIN AD_Attachment a ");
+		sqlFolders.append("         ON ( a.AD_StorageProvider_ID = sp.AD_StorageProvider_ID ) ");
 		sqlFolders.append("WHERE  sp.Method = 'FileSystem' ");
 		if (getAD_Client_ID() > 0)
-			sqlFolders.append("   AND ci.AD_Client_ID=").append(getAD_Client_ID());
+			sqlFolders.append("   AND a.AD_Client_ID=").append(getAD_Client_ID());
+		sqlFolders.append(" UNION ");
+		sqlFolders.append("SELECT DISTINCT Folder ");
+		sqlFolders.append("FROM   AD_StorageProvider sp ");
+		sqlFolders.append("       JOIN AD_Archive a ");
+		sqlFolders.append("         ON ( a.AD_StorageProvider_ID = sp.AD_StorageProvider_ID ) ");
+		sqlFolders.append("WHERE  sp.Method = 'FileSystem' ");
+		if (getAD_Client_ID() > 0)
+			sqlFolders.append("   AND a.AD_Client_ID=").append(getAD_Client_ID());
 		sqlFolders.append(" UNION ");
 		sqlFolders.append("SELECT DISTINCT Folder ");
 		sqlFolders.append("                || '%AD_Image%' ");
 		sqlFolders.append("FROM   AD_StorageProvider sp ");
-		sqlFolders.append("       JOIN AD_ClientInfo ci ");
-		sqlFolders.append("         ON ( ci.StorageImage_ID = sp.AD_StorageProvider_ID ) ");
+		sqlFolders.append("       JOIN AD_Image a ");
+		sqlFolders.append("         ON ( a.AD_StorageProvider_ID = sp.AD_StorageProvider_ID ) ");
 		sqlFolders.append("WHERE  sp.Method = 'FileSystem' ");
 		if (getAD_Client_ID() > 0)
-			sqlFolders.append("   AND ci.AD_Client_ID=").append(getAD_Client_ID());
+			sqlFolders.append("   AND a.AD_Client_ID=").append(getAD_Client_ID());
 		sqlFolders.append(" ORDER  BY 1");
 
 		Set<String> allFilesSet = new HashSet<>(allFiles);
