@@ -209,26 +209,28 @@ public class CheckFiles extends SvrProcess{
 		Set<String> allFilesSet = new HashSet<>(allFiles);
 		List<String> orphanFiles = new ArrayList<String>();
 		List<List<Object>> folders = DB.getSQLArrayObjectsEx(get_TrxName(), sqlFolders.toString());
-		for (List<Object> folder : folders) {
-			String folderPath = folder.get(0).toString();
-			if (folderPath.endsWith("%AD_Image%")) {
-				folderPath = folderPath.substring(0, folderPath.length()-10);
-				if (! folderPath.endsWith(File.separator))
-					folderPath += File.separator;
-				folderPath += "AD_Image" + File.separator;
+		if (folders != null) {
+			for (List<Object> folder : folders) {
+				String folderPath = folder.get(0).toString();
+				if (folderPath.endsWith("%AD_Image%")) {
+					folderPath = folderPath.substring(0, folderPath.length()-10);
+					if (! folderPath.endsWith(File.separator))
+						folderPath += File.separator;
+					folderPath += "AD_Image" + File.separator;
+				}
+				if (getAD_Client_ID() > 0) {
+					if (! folderPath.endsWith(File.separator))
+						folderPath += File.separator;
+					folderPath += getAD_Client_ID();
+				}
+				Files.walk(Paths.get(folderPath))
+				.filter(Files::isRegularFile)
+				.forEach(path -> {
+					String fileName = path.toString();
+					if (! allFilesSet.contains(fileName))
+						orphanFiles.add(fileName);
+				});
 			}
-			if (getAD_Client_ID() > 0) {
-				if (! folderPath.endsWith(File.separator))
-					folderPath += File.separator;
-				folderPath += getAD_Client_ID();
-			}
-			Files.walk(Paths.get(folderPath))
-			.filter(Files::isRegularFile)
-			.forEach(path -> {
-				String fileName = path.toString();
-				if (! allFilesSet.contains(fileName))
-					orphanFiles.add(fileName);
-			});
 		}
 
 		// report lists
