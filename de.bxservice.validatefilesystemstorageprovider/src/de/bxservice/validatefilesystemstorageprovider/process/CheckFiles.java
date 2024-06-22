@@ -162,14 +162,18 @@ public class CheckFiles extends SvrProcess{
 				tabRec.add(record.get(3));
 				if (! existInArray(orphanRecords, tabRec)) {
 					MTable table = MTable.get(tableId);
-					StringBuilder verifSql = new StringBuilder("SELECT 1 FROM ")
-							.append(table.getTableName())
-							.append(" WHERE ")
-							.append(table.getKeyColumns()[0])
-							.append("=?");
-					int one = DB.getSQLValueEx(get_TrxName(), verifSql.toString(), recordId);
-					if (one != 1)
-						orphanRecords.add(tabRec);
+					if (table.getKeyColumns().length == 1) {
+						StringBuilder verifSql = new StringBuilder("SELECT 1 FROM ")
+								.append(table.getTableName())
+								.append(" WHERE ")
+								.append(table.getKeyColumns()[0])
+								.append("=?");
+						int one = DB.getSQLValueEx(get_TrxName(), verifSql.toString(), recordId);
+						if (one != 1)
+							orphanRecords.add(tabRec);
+					} else {
+						orphanRecords.add(tabRec); // table without ID column, or with multi-ID, the Record_ID is wrong
+					}
 				}
 			}
 		}
