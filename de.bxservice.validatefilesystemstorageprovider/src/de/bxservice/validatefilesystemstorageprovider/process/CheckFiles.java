@@ -93,6 +93,7 @@ public class CheckFiles extends SvrProcess{
 		sql.append("  JOIN ad_storageprovider s ON (a.ad_storageprovider_id=s.ad_storageprovider_id AND s.METHOD='FileSystem') ");
 		sql.append("WHERE a.title = 'xml' ");
 		sql.append("  AND a.binarydata IS NOT NULL ");
+		sql.append("  AND a.record_id IS NOT NULL ");
 		if (getAD_Client_ID() > 0)
 			sql.append("  AND a.ad_client_id=? ");
 		sql.append("UNION ");
@@ -106,7 +107,8 @@ public class CheckFiles extends SvrProcess{
 		sql.append("    , a.ad_table_id, a.record_id, 'AD_Archive' ");
 		sql.append("FROM ad_archive a ");
 		sql.append("  JOIN ad_storageprovider s ON (a.ad_storageprovider_id=s.ad_storageprovider_id AND s.METHOD='FileSystem') ");
-		sql.append("WHERE a.binarydata IS NOT null ");
+		sql.append("WHERE a.binarydata IS NOT NULL ");
+		sql.append("  AND a.record_id IS NOT NULL ");
 		if (getAD_Client_ID() > 0)
 			sql.append("  AND a.ad_client_id=? ");
 		sql.append("UNION ");
@@ -120,7 +122,7 @@ public class CheckFiles extends SvrProcess{
 		sql.append("    , 0, 0, 'AD_Image' ");
 		sql.append("FROM ad_image a ");
 		sql.append("  JOIN ad_storageprovider s ON (a.ad_storageprovider_id=s.ad_storageprovider_id AND s.METHOD='FileSystem') ");
-		sql.append("WHERE a.binarydata IS NOT null ");
+		sql.append("WHERE a.binarydata IS NOT NULL ");
 		if (getAD_Client_ID() > 0)
 			sql.append("  AND a.ad_client_id=? ");
 		sql.append(") f ");
@@ -162,7 +164,7 @@ public class CheckFiles extends SvrProcess{
 				tabRec.add(record.get(3));
 				if (! existInArray(orphanRecords, tabRec)) {
 					MTable table = MTable.get(tableId);
-					if (table.getKeyColumns().length == 1) {
+					if (table.isIDKeyTable()) { // TODO: manage attachments for UUID tables
 						StringBuilder verifSql = new StringBuilder("SELECT 1 FROM ")
 								.append(table.getTableName())
 								.append(" WHERE ")
@@ -177,6 +179,7 @@ public class CheckFiles extends SvrProcess{
 				}
 			}
 		}
+		statusUpdate("Verifying orphan files");
 
 		// traverse attachment/archive folders and verify if the file is listed in the list
 		StringBuilder  sqlFolders = new StringBuilder();
@@ -235,6 +238,7 @@ public class CheckFiles extends SvrProcess{
 
 		// report lists
 		if (missingFiles.size() > 0) {
+			statusUpdate("Logging missing files");
 			addLog("** Missing Files **");
 			for (List<Object> record : missingFiles) {
 				String fileName = record.get(0).toString();
@@ -252,6 +256,7 @@ public class CheckFiles extends SvrProcess{
 		}
 
 		if (emptyFiles.size() > 0) {
+			statusUpdate("Logging empty files");
 			addLog("** Empty Files **");
 			for (List<Object> record : emptyFiles) {
 				String fileName = record.get(0).toString();
@@ -269,6 +274,7 @@ public class CheckFiles extends SvrProcess{
 		}
 
 		if (orphanFiles.size() > 0) {
+			statusUpdate("Logging orphan files");
 			addLog("** Orphan Files **");
 			for (String fileName : orphanFiles) {
 				addLog (0, null, THREE, fileName);
@@ -276,6 +282,7 @@ public class CheckFiles extends SvrProcess{
 		}
 
 		if (orphanRecords.size() > 0) {
+			statusUpdate("Logging orphan records");
 			addLog("** Orphan Records **");
 			for (List<Object> record : orphanRecords) {
 				String originTableName = record.get(3).toString();
